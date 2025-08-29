@@ -30,13 +30,16 @@
  * @param 		size 		dimension of the matrices
  */
 void naive_mat_mul(double* A, double* B, double* C, int size) {
+	int c = 0;
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
 			for (int k = 0; k < size; k++) {
 				C[i * size + j] += A[i * size + k] * B[k * size + j];
+				c++;
 			}
 		}
 	}
+	printf("Count: %d\n", c);
 }
 
 /**
@@ -134,7 +137,7 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 						const double a = A[i * size + k];
 						__m256d c = _mm256_setzero_pd();
 
-						for (int j = 0; j < size; j += 16) {
+						for (int j = jj; j < jj + tile_size; j += 16) {
 							{
 								// Unroll #1
 								__m256d a_ext = _mm256_set1_pd(a);
@@ -171,14 +174,14 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 								c = _mm256_fmadd_pd(a_ext, b, c);
 								_mm256_storeu_pd(&C[i * size + j + 12], c);
 							}
+							cc2 += 16;
 						}
 					}
 				}
 			}
 		}
 	}
-}
-
+	
 #if 0
 	for (int p = 0; p < size; p++) {
 		printf("\n");
@@ -186,9 +189,8 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 			printf("%.4f\t", C[p * size + q]);
 		}
 	}
-#endif
-
-printf("Count: %d\n", cc2);
+#endif		
+	printf("Count: %d\n", cc2);
 }
 
 // NOTE: DO NOT CHANGE ANYTHING BELOW THIS LINE
