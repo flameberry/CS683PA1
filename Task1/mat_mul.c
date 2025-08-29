@@ -102,7 +102,7 @@ void simd_mat_mul(double* A, double* B, double* C, int size) {
 			const double a = A[i * size + k];
 			__m256d c = _mm256_setzero_pd();
 
-			for (int j = 0; j < size; j++) {
+			for (int j = 0; j < size; j += 4) {
 				__m256d a_ext = _mm256_set1_pd(a);
 				__m256d b = _mm256_loadu_pd(&B[k * size + j]);
 				__m256d c = _mm256_loadu_pd(&C[i * size + j]);
@@ -131,73 +131,53 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 			for (int kk = 0; kk < size; kk += tile_size) {
 				for (int i = ii; i < ii + tile_size; i++) {
 					for (int k = kk; k < kk + tile_size; k++) {
-						const double a = A[i * size + k]; // Get value of A[i][k]
+						const double a = A[i * size + k];
+						__m256d c = _mm256_setzero_pd();
 
-						// Using AVX2 to handle 4 values of B at a time
-						for (int j = jj; j < jj + tile_size; j += 16) {
-
-							// Unroll #1
+						for (int j = 0; j < size; j += 16) {
 							{
-								// Load 4 values from B into SIMD register (256-bit register)
-								__m256d b_vals = _mm256_loadu_pd(&B[k * size + j]);
+								// Unroll #1
+								__m256d a_ext = _mm256_set1_pd(a);
+								__m256d b = _mm256_loadu_pd(&B[k * size + j]);
+								__m256d c = _mm256_loadu_pd(&C[i * size + j]);
 
-								// Multiply a (single value) by 4 values in b_vals and accumulate in SIMD register
-								__m256d c_vals = _mm256_loadu_pd(&C[i * size + j]); // Load current values of C[i][j..j+3]
-								__m256d a_val = _mm256_set1_pd(a);					// Set the value of A[i][k] in all 4 positions of the register
-								c_vals = _mm256_fmadd_pd(a_val, b_vals, c_vals);	// c_vals += a * b_vals
-
-								// Store the result back into C
-								_mm256_storeu_pd(&C[i * size + j], c_vals);
+								c = _mm256_fmadd_pd(a_ext, b, c);
+								_mm256_storeu_pd(&C[i * size + j], c);
 							}
-
-							// Unroll #2
 							{
-								// Load 4 values from B into SIMD register (256-bit register)
-								__m256d b_vals = _mm256_loadu_pd(&B[k * size + j + 4]);
+								// Unroll #2
+								__m256d a_ext = _mm256_set1_pd(a);
+								__m256d b = _mm256_loadu_pd(&B[k * size + j + 4]);
+								__m256d c = _mm256_loadu_pd(&C[i * size + j + 4]);
 
-								// Multiply a (single value) by 4 values in b_vals and accumulate in SIMD register
-								__m256d c_vals = _mm256_loadu_pd(&C[i * size + j + 4]); // Load current values of C[i][j..j+3]
-								__m256d a_val = _mm256_set1_pd(a);						// Set the value of A[i][k] in all 4 positions of the register
-								c_vals = _mm256_fmadd_pd(a_val, b_vals, c_vals);		// c_vals += a * b_vals
-
-								// Store the result back into C
-								_mm256_storeu_pd(&C[i * size + j + 4], c_vals);
+								c = _mm256_fmadd_pd(a_ext, b, c);
+								_mm256_storeu_pd(&C[i * size + j + 4], c);
 							}
-
-							// Unroll #3
 							{
-								// Load 4 values from B into SIMD register (256-bit register)
-								__m256d b_vals = _mm256_loadu_pd(&B[k * size + j + 8]);
+								// Unroll #3
+								__m256d a_ext = _mm256_set1_pd(a);
+								__m256d b = _mm256_loadu_pd(&B[k * size + j + 8]);
+								__m256d c = _mm256_loadu_pd(&C[i * size + j + 8]);
 
-								// Multiply a (single value) by 4 values in b_vals and accumulate in SIMD register
-								__m256d c_vals = _mm256_loadu_pd(&C[i * size + j + 8]); // Load current values of C[i][j..j+3]
-								__m256d a_val = _mm256_set1_pd(a);						// Set the value of A[i][k] in all 4 positions of the register
-								c_vals = _mm256_fmadd_pd(a_val, b_vals, c_vals);		// c_vals += a * b_vals
-
-								// Store the result back into C
-								_mm256_storeu_pd(&C[i * size + j + 8], c_vals);
+								c = _mm256_fmadd_pd(a_ext, b, c);
+								_mm256_storeu_pd(&C[i * size + j + 8], c);
 							}
-
-							// Unroll #4
 							{
-								// Load 4 values from B into SIMD register (256-bit register)
-								__m256d b_vals = _mm256_loadu_pd(&B[k * size + j + 12]);
+								// Unroll #4
+								__m256d a_ext = _mm256_set1_pd(a);
+								__m256d b = _mm256_loadu_pd(&B[k * size + j + 12]);
+								__m256d c = _mm256_loadu_pd(&C[i * size + j + 12]);
 
-								// Multiply a (single value) by 4 values in b_vals and accumulate in SIMD register
-								__m256d c_vals = _mm256_loadu_pd(&C[i * size + j + 12]); // Load current values of C[i][j..j+3]
-								__m256d a_val = _mm256_set1_pd(a);						 // Set the value of A[i][k] in all 4 positions of the register
-								c_vals = _mm256_fmadd_pd(a_val, b_vals, c_vals);		 // c_vals += a * b_vals
-
-								// Store the result back into C
-								_mm256_storeu_pd(&C[i * size + j + 12], c_vals);
+								c = _mm256_fmadd_pd(a_ext, b, c);
+								_mm256_storeu_pd(&C[i * size + j + 12], c);
 							}
-							cc2 += 16;
 						}
 					}
 				}
 			}
 		}
 	}
+}
 
 #if 0
 	for (int p = 0; p < size; p++) {
@@ -208,7 +188,7 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 	}
 #endif
 
-	printf("Count: %d\n", cc2);
+printf("Count: %d\n", cc2);
 }
 
 // NOTE: DO NOT CHANGE ANYTHING BELOW THIS LINE
