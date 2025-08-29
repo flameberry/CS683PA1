@@ -99,13 +99,12 @@ Matrix MatrixOperation::TiledMatMul(const Matrix& A, const Matrix& B) {
 	int j_max = 0;
 	//----------------------------------------------------- Write your code here ----------------------------------------------------------------
 
-	const int TILE_SIZE = 64;
 	for (int ii = 0; ii < n; ii += TILE_SIZE) {
 		for (int jj = 0; jj < k; jj += TILE_SIZE) {
 			for (int ll = 0; ll < m; ll += TILE_SIZE) {
-				int i_max = std::min(ii + TILE_SIZE, n);
-				int j_max = std::min(jj + TILE_SIZE, k);
-				int l_max = std::min(ll + TILE_SIZE, m);
+				int i_max = std::min(ii + TILE_SIZE, (int)n);
+				int j_max = std::min(jj + TILE_SIZE, (int)k);
+				int l_max = std::min(ll + TILE_SIZE, (int)m);
 				for (int i = ii; i < i_max; i++) {
 					for (int j = jj; j < j_max; j++) {
 						for (int l = ll; l < l_max; l++) {
@@ -177,11 +176,10 @@ Matrix MatrixOperation::Transpose(const Matrix& A) {
 	// Write your code here and commnent the above code
 	//----------------------------------------------------- Write your code here ----------------------------------------------------------------
 
-	const int TILE_SIZE = 64;
 	for (int ii = 0; ii < rows; ii += TILE_SIZE) {
 		for (int jj = 0; jj < cols; jj += TILE_SIZE) {
-			const int i_max = std::min(ii + TILE_SIZE, rows);
-			const int j_max = std::min(jj + TILE_SIZE, cols);
+			const int i_max = std::min(ii + TILE_SIZE, (int)rows);
+			const int j_max = std::min(jj + TILE_SIZE, (int)cols);
 			for (int i = ii; i < i_max; i++) {
 				for (int j = jj; j < j_max; j++) {
 					result(j, i) = A(i, j);

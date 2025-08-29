@@ -100,7 +100,7 @@ void tile_mat_mul(double* A, double* B, double* C, int size, int tile_size) {
  * @note 		You can assume that the matrices are square matrices.
  */
 void simd_mat_mul(double* A, double* B, double* C, int size) {
-#if 1
+#if 0
 	for (int i = 0; i < size; i++) {
 		for (int k = 0; k < size; k++) {
 			const double a = A[i * size + k];
