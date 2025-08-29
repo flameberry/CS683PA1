@@ -100,6 +100,23 @@ void tile_mat_mul(double* A, double* B, double* C, int size, int tile_size) {
  * @note 		You can assume that the matrices are square matrices.
  */
 void simd_mat_mul(double* A, double* B, double* C, int size) {
+#if 1
+	for (int i = 0; i < size; i++) {
+		for (int k = 0; k < size; k++) {
+			const double a = A[i * size + k];
+			__m128d c = _mm_setzero_pd();
+
+			for (int j = 0; j < size; j += 2) {
+				__m128d a_ext = _mm_set1_pd(a);
+				__m128d b = _mm_loadu_pd(&B[k * size + j]);
+				c = _mm_loadu_pd(&C[i * size + j]);
+
+				c = _mm_fmadd_pd(a_ext, b, c);
+				_mm_storeu_pd(&C[i * size + j], c);
+			}
+		}
+	}
+#else
 	for (int i = 0; i < size; i++) {
 		for (int k = 0; k < size; k++) {
 			const double a = A[i * size + k];
@@ -108,13 +125,14 @@ void simd_mat_mul(double* A, double* B, double* C, int size) {
 			for (int j = 0; j < size; j += 4) {
 				__m256d a_ext = _mm256_set1_pd(a);
 				__m256d b = _mm256_loadu_pd(&B[k * size + j]);
-				__m256d c = _mm256_loadu_pd(&C[i * size + j]);
+				c = _mm256_loadu_pd(&C[i * size + j]);
 
 				c = _mm256_fmadd_pd(a_ext, b, c);
 				_mm256_storeu_pd(&C[i * size + j], c);
 			}
 		}
 	}
+#endif
 }
 
 /**
@@ -181,7 +199,7 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 			}
 		}
 	}
-	
+
 #if 0
 	for (int p = 0; p < size; p++) {
 		printf("\n");
@@ -189,7 +207,7 @@ void combination_mat_mul(double* A, double* B, double* C, int size, int tile_siz
 			printf("%.4f\t", C[p * size + q]);
 		}
 	}
-#endif		
+#endif
 	printf("Count: %d\n", cc2);
 }
 
